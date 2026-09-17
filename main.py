@@ -143,20 +143,45 @@ def put_task(id: int, update: TaskUpdate):
     if update.title is None and update.done is None:
         raise HTTPException(status_code=400, detail="Request body must include title and/or done")
 
-    for task in tasks:
-        if task["id"] == id:
-            if update.title is not None:
-                task["title"] = update.title
-            if update.done is not None:
-                task["done"] = update.done
-            return task
+    conn = get_db()
+    cursor = conn.cursor()
 
-    raise HTTPException(status_code=404, detail=f"Task {id} not found")
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    existing = cursor.fetchone()
+
+    if existing is None:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"Task {id} not found")
+
+    new_title = update.title if update.title is not None else existing["title"]
+    new_done = int(update.done) if update.done is not None else existing["done"]
+
+    cursor.execute(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        (new_title, new_done, id)
+    )
+    conn.commit()
+
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    task = dict(cursor.fetchone())
+    task["done"] = bool(task["done"])
+    conn.close()
+
+    return task
 
 @app.delete("/tasks/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(id: int):
-    for task in tasks:
-        if task["id"] == id:
-            tasks.remove(task)
-            return
-    raise HTTPException(status_code=404, detail=f"Task {id} not found")
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    existing = cursor.fetchone()
+
+    if existing is None:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"Task {id} not found")
+
+    cursor.execute("DELETE FROM tasks WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    return
