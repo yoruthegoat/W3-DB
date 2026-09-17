@@ -133,6 +133,7 @@ def post_task(task: Task ):
     new_id = cursor.lastrowid
     cursor.execute("SELECT * FROM tasks WHERE id = ?", (new_id,))
     new_task = dict(cursor.fetchone())
+    new_task["done"] = bool(new_task["done"])
     conn.close()
 
     return new_task
