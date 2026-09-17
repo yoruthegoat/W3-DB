@@ -131,7 +131,7 @@ def post_task(task: Task ):
     conn.commit()
 
     new_id = cursor.lastrowid
-    cursor.execute("SELECT * FROM tasks WHERE id = ?", (new_id),)
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (new_id,))
     new_task = dict(cursor.fetchone())
     conn.close()
 
