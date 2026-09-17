@@ -34,5 +34,3 @@ Returned all 3 seeded tasks, since they're all marked done by default.
 | POST   | `/tasks`      | Create task              | 201     | 400 (missing/empty title)  |
 | PUT    | `/tasks/{id}` | Update task              | 200     | 400 (empty body), 404      |
 | DELETE | `/tasks/{id}` | Delete task              | 204     | 404                        |
-
-## Example
