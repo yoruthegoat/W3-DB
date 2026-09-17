@@ -1,4 +1,4 @@
-# Task API
+# DB
 
 ## Install & run
 
@@ -9,6 +9,19 @@ python -m venv .venv && source .venv/bin/activate && pip install -r requirements
 Windows: use `.venv\Scripts\Activate.ps1` instead of `source .venv/bin/activate`.
 
 Runs at `http://127.0.0.1:8000`. Docs at `/docs`.
+
+## Database
+
+Uses SQLite (`tasks.db`) — a single file, no server to set up. The file and its `tasks` table are created automatically on first run, seeded with 3 example tasks. It's git-ignored, so a fresh clone regenerates it. Data survives server restarts.
+
+Example query run in DB Browser:
+```sql
+SELECT * FROM tasks WHERE done = 1;
+```
+Returned all 3 seeded tasks, since they're all marked done by default.
+
+<img width="1891" height="1011" alt="image" src="https://github.com/user-attachments/assets/cf0cbd95-e02a-40cf-93fd-c5780e5026c4" />
+
 
 ## Endpoints
 
@@ -23,20 +36,3 @@ Runs at `http://127.0.0.1:8000`. Docs at `/docs`.
 | DELETE | `/tasks/{id}` | Delete task              | 204     | 404                        |
 
 ## Example
-
-```
-$ curl -i -X POST http://127.0.0.1:8000/tasks -H "Content-Type: application/json" -d '{"title": "Buy milk"}'
-
-HTTP/1.1 201 Created
-date: Thu, 03 Sep 2026 07:23:29 GMT
-server: uvicorn
-content-length: 40
-content-type: application/json
-
-{"id":4,"title":"Buy milk","done":false}
-```
-
-## Swagger
-
-`/docs`
-
