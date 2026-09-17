@@ -86,18 +86,34 @@ def get_health():
 
 @app.get("/tasks")
 def get_tasks():
-    return tasks
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks")
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = [dict(row) for row in rows]
+    for task in result:
+        # since sqlite just has 1s and 0s
+        task["done"] = bool(task["done"])
+    return result
 
 @app.get("/tasks/{id}")
 def get_task(id: int):
-    # we are gonna search by iterating
-    for task in tasks:
-        if task["id"] == id:
-            return task
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    conn.close()
 
-    # https://fastapi.tiangolo.com/tutorial/handling-errors/
-    # if bad request (does not exist)
-    raise HTTPException(status_code=404, detail=f"Task {id} not found")
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Task {id} not found")
+
+    task = dict(row)
+
+    # since sqlite just has 1s and 0s
+    task["done"] = bool(task["done"])
+    return task
 
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED)
@@ -106,12 +122,20 @@ def post_task(task: Task ):
     if not task.title or not task.title.strip():
         raise HTTPException(status_code=400, detail="title is required and cannot be empty")
 
-    new_task = {
-        "id": len(tasks) + 1,
-        "title": task.title,
-        "done": False
-    }
-    tasks.append(new_task)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        (task.title, 0)
+    )
+
+    conn.commit()
+
+    new_id = cursor.lastrowid
+    cursor.execute("SELECT * FROM tasks WHERE id = ?", (new_id),)
+    new_task = dict(cursor.fetchone())
+    conn.close()
+
     return new_task
 
 @app.put("/tasks/{id}")
