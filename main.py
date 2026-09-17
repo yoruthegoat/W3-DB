@@ -117,7 +117,6 @@ def get_task(id: int):
 
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED)
-# since i used a pydantic basemodel, it automatically validates input and returns 422 which is from the same 400 family
 def post_task(task: Task ):
     if not task.title or not task.title.strip():
         raise HTTPException(status_code=400, detail="title is required and cannot be empty")
